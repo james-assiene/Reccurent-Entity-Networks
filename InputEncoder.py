@@ -16,15 +16,15 @@ class InputEncoder(nn.Module):
         
         super(InputEncoder, self).__init__()
         self.input_embedding = nn.Embedding(vocabulary_size, embedding_dim)
-        self.sequence_length = sequence_length
-        self.f = torch.empty(sequence_length, embedding_dim)
+        self.max_sequence_length = sequence_length
+        self.f = torch.empty(self.max_sequence_length, embedding_dim)
         nn.init.xavier_normal_(self.f)
         
     def forward(self, input_sequence):
         
-        e = self.input_embedding(input_sequence)
+        e = self.input_embedding(input_sequence) # batch x num_sentences x num_words x embedding_dim
         
-        s = self.f * e
-        s = s.sum(0)
+        s = self.f[:e.shape[2],:] * e
+        s = s.sum(dim=2) # batch x num_sentences x embedding_dim
         
-        return s.view(1,-1)
+        return s

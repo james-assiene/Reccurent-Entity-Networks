@@ -19,10 +19,15 @@ class OutputModule(nn.Module):
         self.H = nn.Linear(embedding_dim, embedding_dim)
         self.R = nn.Linear(embedding_dim, output_dim)
         
+        self.non_linearity = nn.PReLU()
+        
     def forward(self, q, h):
-        p = F.softmax(q @ h.t(), dim=1)
-        u = (p.t() * h).sum(0).view(1,-1)
-        y = q + self.H(u)
-        y = self.R(F.prelu(y))
+        
+        #q : batch x embedding_dim x 1
+        #h : batch x num_memory_blocks x embedding_dim
+        
+        p = F.softmax(h.bmm(q), dim=1) # batch x num_memory_block x 1
+        u = (p * h).sum(1, keepdim=True).transpose(1,2) # batch x embedding_dim x 1
+        y = q.squeeze(2) + self.H(u.squeeze(2)) # batch x embedding_dim x 1
         
         return y

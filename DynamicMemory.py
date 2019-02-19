@@ -17,8 +17,12 @@ class DynamicMemory(nn.Module):
     def __init__(self, hidden_number=20, hidden_size=100):
         
         super(DynamicMemory, self).__init__()
+        
         self.h = torch.empty(1, hidden_number, hidden_size)
         self.w = torch.empty(1, hidden_number, hidden_size)
+        
+#        self.h = nn.Linear(hidden_size, hidden_number)
+#        self.w = nn.Linear(hidden_size, hidden_number)
         
         self.U = nn.Linear(hidden_size, hidden_size, bias=False)
         self.V = nn.Linear(hidden_size, hidden_size, bias=False)
@@ -33,11 +37,16 @@ class DynamicMemory(nn.Module):
         
         # s_t : batch x embedding_dim
         s_t = s_t.unsqueeze(1)
-        #print("s_t : ", s_t.shape, "\n h : ", self.h.shape)
+#        print("s_t : ", s_t.shape, "\n h : ", self.h.shape)
         
         g = torch.sigmoid((self.h + self.w) @ s_t.transpose(1,2)) # batch x num_memory_blocks x 1
         h_candidate = self.non_linearity(self.U(self.h) + self.V(self.w) + self.W(s_t)) # batch x num_memory_blocks x embedding_dim
         self.h = self.h + g * h_candidate # batch x num_memory_blocks x embedding_dim
         self.h = self.h / self.h.norm(p=2, dim=2, keepdim=True)
+        
+#        g = torch.sigmoid(self.h(s_t) + self.w(s_t)).transpose(1,2)  # batch x num_memory_blocks x 1
+#        h_candidate = self.non_linearity((self.U(self.h.weight) + self.V(self.w.weight)) + self.W(s_t)) # batch x num_memory_blocks x embedding_dim
+#        self.h.weight.data = self.h.weight + g * h_candidate # batch x num_memory_blocks x embedding_dim
+#        self.h.weight.data = self.h.weight / self.h.weight.norm(p=2, dim=2, keepdim=True)
         
         return self.h

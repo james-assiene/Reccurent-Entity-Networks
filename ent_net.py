@@ -14,6 +14,7 @@ import torch
 from torch import optim
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 from RecurrentEntityNetwork import RecurrentEntityNetwork
 
@@ -44,6 +45,7 @@ class EntNetAgent(TorchAgent):
         
         self.dictionnary_size = 177
         self.embedding_dim = 100
+        self.batch_size = opt["batchsize"]
         
         self.criterion = nn.CrossEntropyLoss()
         
@@ -104,6 +106,9 @@ class EntNetAgent(TorchAgent):
     def eval_step(self, batch):
         questions = batch.text_vec
         contexts = padded_3d(batch.memory_vecs)
+        
+        if contexts.shape[0] != self.batch_size:
+            return Output(self.dict.vec2txt(np.random.choice(self.dictionnary_size, size=contexts.shape[0])).split(" "))
 
         output = self.recurrent_entity_network(questions, contexts)
         pred = output.argmax(dim=1)

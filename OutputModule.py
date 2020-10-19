@@ -28,6 +28,7 @@ class OutputModule(nn.Module):
         
         p = F.softmax(h.bmm(q), dim=1) # batch x num_memory_block x 1
         u = (p * h).sum(1, keepdim=True).transpose(1,2) # batch x embedding_dim x 1
-        y = q.squeeze(2) + self.H(u.squeeze(2)) # batch x embedding_dim x 1
+        y = self.non_linearity(q.squeeze(2) + self.H(u.squeeze(2))) # batch x embedding_dim
+        y = self.R(y) # batch x output_dim
         
         return y

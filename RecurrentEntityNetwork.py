@@ -17,10 +17,10 @@ from OutputModule import OutputModule
 
 class RecurrentEntityNetwork(nn.Module):
     
-    def __init__(self, vocabulary_size=177, embedding_dim=100, sequence_length=7, num_memory_blocks=20):
+    def __init__(self, vocabulary_size=177, embedding_dim=100, max_sequence_length=20, num_memory_blocks=20):
         
         super(RecurrentEntityNetwork, self).__init__()
-        self.input_encoder = InputEncoder(vocabulary_size, embedding_dim, sequence_length)
+        self.input_encoder = InputEncoder(vocabulary_size, embedding_dim, max_sequence_length)
         self.dynamic_memory = DynamicMemory(num_memory_blocks, embedding_dim)
         self.output_module = OutputModule(embedding_dim, vocabulary_size)
         
@@ -28,6 +28,7 @@ class RecurrentEntityNetwork(nn.Module):
         
         s = self.input_encoder(text)
         q = self.input_encoder(q.unsqueeze(1))
+        self.dynamic_memory.reset_memory()
         
         for t in range(s.shape[1]):
             h = self.dynamic_memory(s[:,t,:])
